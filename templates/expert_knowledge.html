@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Expert — Knowledge base{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Knowledge base</h1>
+  <p>Update symptoms, plans, foods, and inference rules (expert KB access).</p>
+  <p class="card-subtitle">
+    Expert: <strong>{{ expert.name }}</strong>
+    · <a href="{{ url_for('expert_dashboard') }}">Back to consultations</a>
+  </p>
+</section>
+
+<div class="admin-grid">
+  <section class="card">
+    <h2>Add Symptom / Condition</h2>
+    <form method="post" action="{{ url_for('expert_symptom_add') }}">
+      <div class="field"><label>Code</label><input name="code" placeholder="optional code"></div>
+      <div class="field"><label>Name</label><input name="name" required placeholder="Name"></div>
+      <div class="field"><label>Description</label><input name="description" placeholder="Short description"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Add</button></div>
+    </form>
+    <h3>Existing</h3>
+    <ul class="compact-list">
+      {% for s in symptoms %}
+        <li><strong>{{ s.code or "—" }}</strong> — {{ s.name }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Add Plan (Diagnosis)</h2>
+    <form method="post" action="{{ url_for('expert_diagnosis_add') }}">
+      <div class="field"><label>Code</label><input name="code" placeholder="optional"></div>
+      <div class="field"><label>Name</label><input name="name" required></div>
+      <div class="field"><label>Description</label><input name="description"></div>
+      <div class="field"><label>General advice</label><input name="general_advice"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Add</button></div>
+    </form>
+    <h3>Existing</h3>
+    <ul class="compact-list">
+      {% for d in diagnoses %}
+        <li><strong>{{ d.code or "—" }}</strong> — {{ d.name }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Add Food</h2>
+    <form method="post" action="{{ url_for('expert_food_add') }}">
+      <div class="field"><label>Name</label><input name="name" required></div>
+      <div class="field"><label>Local name</label><input name="local_name"></div>
+      <div class="field"><label>Category</label><input name="category"></div>
+      <div class="field"><label>Description</label><input name="description"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Add</button></div>
+    </form>
+    <h3>Existing</h3>
+    <ul class="compact-list">
+      {% for f in foods %}
+        <li><strong>{{ f.category or "—" }}</strong> — {{ f.name }}{% if f.local_name %} ({{ f.local_name }}){% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Add / Update Rule</h2>
+    <form method="post" action="{{ url_for('expert_rule_add') }}">
+      <div class="field">
+        <label>Condition</label>
+        <select name="symptom_id" required>
+          {% for s in symptoms %}
+            <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Plan</label>
+        <select name="diagnosis_id" required>
+          {% for d in diagnoses %}
+            <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>Weight</label><input type="number" name="weight" min="1" max="10" value="3"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Save</button></div>
+    </form>
+    <h3>Rules (edit weight or delete)</h3>
+    <ul class="compact-list" style="list-style:none; padding-left:0;">
+      {% for r in rules %}
+        <li style="margin-bottom:12px; border-bottom:1px solid #e5e7eb; padding-bottom:10px;">
+          <div style="margin-bottom:6px;"><strong>{{ r.symptom_name }}</strong> → {{ r.diagnosis_name }}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:end;">
+            <form method="post" action="{{ url_for('expert_rule_update') }}" style="display:flex; gap:8px; align-items:end;">
+              <input type="hidden" name="rule_id" value="{{ r.id }}">
+              <div class="field" style="margin:0;">
+                <label>Weight</label>
+                <input type="number" name="weight" min="1" max="10" value="{{ r.weight }}" style="width:72px;">
+              </div>
+              <button class="secondary-btn" type="submit">Update</button>
+            </form>
+            <form method="post" action="{{ url_for('expert_rule_delete') }}" onsubmit="return confirm('Delete this rule?');">
+              <input type="hidden" name="rule_id" value="{{ r.id }}">
+              <button class="secondary-btn" type="submit" style="color:#b91c1c;">Delete</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Your activity log</h2>
+    <p class="card-subtitle">Recent knowledge-base actions you performed.</p>
+    {% if activity %}
+      <ul class="compact-list">
+        {% for a in activity %}
+          <li><strong>{{ a.created_at }}</strong> — {{ a.action }}{% if a.detail %}: {{ a.detail }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No logged actions yet (or activity table not migrated).</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

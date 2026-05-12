@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>
+    Welcome{% if user %}, {{ user.username }}{% endif %}!
+  </h1>
+  <p>Your personalized nutrition and diet recommendation system.</p>
+</section>
+
+<section class="card hero-image-card">
+  <div class="hero-image-row">
+    <div class="hero-image-left">
+      <h2>Fresh food ideas (Ghana-friendly)</h2>
+      <p class="card-subtitle">Use this platform to generate meal suggestions based on your profile.</p>
+      <div class="card-footer-right" style="justify-content:flex-start;">
+        <span class="score-pill" style="background:rgba(56,189,248,0.12);color:#1d4ed8;">Nutrition & Diet</span>
+      </div>
+    </div>
+    <div class="hero-image-right">
+      {% if hero_image %}
+        <img class="hero-image" src="{{ url_for('serve_asset', filename=hero_image) }}" alt="Fresh fruits and vegetables">
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<div class="tabs-row">
+  <a class="tab active" href="{{ url_for('dashboard') }}">Health Profile</a>
+  <a class="tab" href="#recommendations" onclick="scrollToRecommendations(event)">Recommendations</a>
+  <a class="tab" href="{{ url_for('timeline') }}">Timeline</a>
+  <a class="tab" href="{{ url_for('history') }}">History</a>
+</div>
+
+{% if not user %}
+  <section class="card notice-card">
+    <h2>Sign in recommended</h2>
+    <p class="card-subtitle">
+      You can use the system as a guest, but signing in lets you save your profile, conditions, history and timeline.
+    </p>
+    <a class="primary-btn" href="{{ url_for('login') }}">Sign in</a>
+  </section>
+{% endif %}
+
+<section class="card profile-card">
+  <h2>Your Health Information</h2>
+  <p class="card-subtitle">Keep your health profile up to date for accurate recommendations.</p>
+
+  <div class="info-grid">
+    <div class="info-pill pill-blue">
+      <span class="pill-label">Age</span>
+      <span class="pill-value" id="pill-age">{{ profile.age or "—" }}</span>
+    </div>
+    <div class="info-pill pill-green">
+      <span class="pill-label">BMI</span>
+      <span class="pill-value" id="pill-bmi">
+        {% if profile.bmi %}{{ "%.2f"|format(profile.bmi) }}{% else %}—{% endif %}
+      </span>
+    </div>
+    <div class="info-pill pill-purple">
+      <span class="pill-label">Activity Level</span>
+      <span class="pill-value" id="pill-activity">{{ profile.activity_level or "—" }}</span>
+    </div>
+    <div class="info-pill pill-orange">
+      <span class="pill-label">Diet Preference</span>
+      <span class="pill-value" id="pill-diet">{{ profile.diet_preference or "—" }}</span>
+    </div>
+    {% if user %}
+    <div class="info-pill pill-blue" style="grid-column: 1 / -1;">
+      <span class="pill-label">Allergies</span>
+      <span class="pill-value" id="pill-allergies">{{ allergy_summary or "—" }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card-footer-right">
+    {% if user %}
+      <button type="button" class="secondary-btn" onclick="openProfileModal()">Update Profile</button>
+    {% else %}
+      <a class="secondary-btn" href="{{ url_for('login') }}">Sign in to update</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>Health Conditions</h2>
+  <p class="card-subtitle">Select any conditions you have to receive tailored recommendations.</p>
+
+  {% if user %}
+    <form method="post" action="{{ url_for('conditions_save') }}">
+      <div class="chip-grid">
+        {% for s in symptoms %}
+          <label class="condition-chip">
+            <input type="checkbox" name="symptoms" value="{{ s.id }}" {% if s.id in selected_symptom_ids %}checked{% endif %}>
+            <span class="chip-label">{{ s.name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      <div class="card-footer-right">
+        <button class="secondary-btn" type="submit">Update Conditions</button>
+      </div>
+    </form>
+  {% else %}
+    <form method="post" action="{{ url_for('recommend') }}" id="guest-recommend-form">
+      <div class="chip-grid">
+        {% for s in symptoms %}
+          <label class="condition-chip">
+            <input type="checkbox" name="symptoms" value="{{ s.id }}">
+            <span class="chip-label">{{ s.name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      <div class="card-footer-right">
+        <button class="primary-btn" type="submit">Get Recommendations</button>
+      </div>
+    </form>
+  {% endif %}
+</section>
+
+<section id="recommendations" class="card">
+  <h2>Generate Recommendations</h2>
+  <p class="card-subtitle">Use your saved conditions (if signed in) or select conditions above as a guest.</p>
+
+  <form method="post" action="{{ url_for('recommend') }}" onsubmit="attachDashboardContext(event)">
+    <input type="hidden" name="bmi" id="bmi-hidden">
+    <input type="hidden" name="bmi_category" id="bmi-category-hidden">
+    <input type="hidden" name="activity_level" id="activity-hidden">
+    <input type="hidden" name="diet_preference" id="diet-hidden">
+
+    {% if not user %}
+      <p class="card-subtitle">Guest mode: recommendations will use the checkboxes you selected above.</p>
+    {% endif %}
+
+    <div class="card-footer-right">
+      <button class="primary-btn" type="submit">Get Recommendations</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Consultation with Nutrition Experts</h2>
+  <p class="card-subtitle">Send your questions to nutrition experts for consultation.</p>
+
+  {% if user %}
+    <div class="card-footer-right">
+      <a class="primary-btn" href="{{ url_for('consult') }}">Contact Experts</a>
+    </div>
+  {% else %}
+    <div class="card-footer-right">
+      <a class="secondary-btn" href="{{ url_for('login') }}">Sign in to consult</a>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Profile modal -->
+<div id="profile-modal" class="modal-backdrop hidden" onclick="closeProfileModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Health Profile</h2>
+      <button type="button" class="icon-btn" onclick="closeProfileModal(event)">✕</button>
+    </div>
+
+    <form method="post" action="{{ url_for('profile_save') }}" class="modal-body" oninput="calculateBMIFromProfile()">
+      <div class="modal-grid">
+        <div class="field">
+          <label>Age</label>
+          <input type="number" name="age" id="age-input" min="1" max="120" value="{{ profile.age or '' }}">
+        </div>
+        <div class="field">
+          <label>Gender</label>
+          <select name="gender" id="gender-input">
+            <option value="">Select</option>
+            {% for g in ["Male","Female","Other"] %}
+              <option value="{{ g }}" {% if profile.gender == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Weight (kg)</label>
+          <input type="number" step="0.01" name="weight_kg" id="weight-input" min="10" max="300" value="{{ profile.weight_kg or '' }}">
+        </div>
+        <div class="field">
+          <label>Height (meters)</label>
+          <input type="number" step="0.01" name="height_m" id="height-input" min="1" max="2.5" value="{{ profile.height_m or '' }}">
+        </div>
+
+        <div class="field full-width">
+          <label>BMI</label>
+          <div class="bmi-inline">
+            <span id="bmi-display">—</span>
+            <span id="bmi-category-display" class="bmi-category-pill hidden"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Activity Level</label>
+          <select name="activity_level" id="activity-input">
+            <option value="">Select</option>
+            {% for a in ["Sedentary","Light (1–3 days/week)","Moderate (3–4 days/week)","Active (5+ days/week)"] %}
+              <option value="{{ a }}" {% if profile.activity_level == a %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Diet Preference</label>
+          <select name="diet_preference" id="diet-input">
+            <option value="">Select</option>
+            {% for d in ["Non‑Vegetarian","Vegetarian","Vegan"] %}
+              <option value="{{ d }}" {% if profile.diet_preference == d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if common_allergens %}
+        <div class="field full-width">
+          <label>Common allergens (select any that apply)</label>
+          <div class="chip-grid" style="margin-top:8px;">
+            {% for a in common_allergens %}
+              <label class="condition-chip">
+                <input type="checkbox" name="allergens" value="{{ a.id }}" {% if a.id in selected_allergen_ids %}checked{% endif %}>
+                <span class="chip-label">{{ a.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="field full-width">
+          <label>Other allergies or details (free text)</label>
+          <textarea name="allergies_notes" id="allergies-notes-input" rows="2" style="width:100%; border-radius:10px; border:1px solid #d1d5db; padding:10px;" placeholder="e.g. specific brands, mild intolerance, etc.">{{ profile.allergies_notes or '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="secondary-btn" onclick="closeProfileModal(event)">Cancel</button>
+        <button type="submit" class="primary-btn" onclick="saveProfileToPills()">Update Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+

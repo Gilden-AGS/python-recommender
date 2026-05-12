@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Recommendations{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Recommendations</h1>
+  <p>Ranked plans and Ghanaian meal suggestions based on your inputs.</p>
+</section>
+
+<section class="card rec-hero">
+  <div class="rec-hero-grid">
+    <div>
+      <h2 style="margin:0 0 6px;">Made for your next meal</h2>
+      <p class="card-subtitle" style="margin-bottom:0;">
+        Ranked plans, plus Ghanaian food suggestions mapped from your selected conditions.
+      </p>
+    </div>
+    <div class="rec-hero-img-wrap">
+      {% if secondary_image %}
+        <img class="rec-hero-img" src="{{ url_for('serve_asset', filename=secondary_image) }}" alt="Fresh food">
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if allergy_filter_active %}
+  <section class="card notice-card">
+    <h2>Allergy-aware food list</h2>
+    <p class="card-subtitle">
+      Foods that may match your saved allergies were removed from suggestions below. Update allergies under Dashboard → Health Profile if this looks too strict.
+    </p>
+  </section>
+{% endif %}
+
+{% if bmi %}
+  <section class="card profile-card">
+    <h2>Profile summary</h2>
+    <div class="info-grid">
+      <div class="info-pill pill-green">
+        <span class="pill-label">BMI</span>
+        <span class="pill-value">{{ bmi }}</span>
+      </div>
+      <div class="info-pill pill-purple">
+        <span class="pill-label">Category</span>
+        <span class="pill-value">{{ bmi_category }}</span>
+      </div>
+    </div>
+    {% if run_id %}
+      <p class="card-subtitle">Saved to history (run #{{ run_id }}).</p>
+    {% endif %}
+  </section>
+{% endif %}
+
+{% if diagnoses %}
+  {% for d in diagnoses %}
+    <section class="card recommendation-card">
+      <div class="rec-header">
+        <h2>{{ d.name }}</h2>
+        <span class="score-pill">Match score: {{ d.score }}</span>
+      </div>
+      <p class="card-subtitle">{{ d.description }}</p>
+
+      <h3>General Guidance</h3>
+      <p>{{ d.general_advice }}</p>
+
+      {% set foods = foods_by_diag.get(d.id, []) %}
+      {% if foods %}
+        <h3>Suggested Ghanaian Meals</h3>
+        <ul class="food-list">
+          {% for f in foods %}
+            <li>
+              <strong>{{ f.name }}</strong>
+              {% if f.local_name %} ({{ f.local_name }}){% endif %}
+              – {{ f.category }}{% if f.note %} – {{ f.note }}{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+  {% endfor %}
+{% else %}
+  <section class="card">
+    <p>No recommendations could be generated for the selected conditions.</p>
+  </section>
+{% endif %}
+
+<div class="actions-row">
+  <a href="{{ url_for('dashboard') }}" class="secondary-btn">← Back to dashboard</a>
+  {% if user %}
+    <a href="{{ url_for('history') }}" class="secondary-btn">View History</a>
+  {% endif %}
+</div>
+{% endblock %}
+

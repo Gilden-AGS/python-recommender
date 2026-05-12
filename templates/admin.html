@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Admin Panel</h1>
+  <p>Manage the recommendation system knowledge base, users, and expert access.</p>
+</section>
+
+{% if stats %}
+<section class="card" style="margin-bottom:20px;">
+  <h2>System overview</h2>
+  <div class="info-grid">
+    <div class="info-pill pill-blue"><span class="pill-label">Users</span><span class="pill-value">{{ stats.get('users', '—') }}</span></div>
+    <div class="info-pill pill-green"><span class="pill-label">Foods</span><span class="pill-value">{{ stats.get('foods', '—') }}</span></div>
+    <div class="info-pill pill-purple"><span class="pill-label">Symptoms</span><span class="pill-value">{{ stats.get('symptoms', '—') }}</span></div>
+    <div class="info-pill pill-orange"><span class="pill-label">Plans</span><span class="pill-value">{{ stats.get('diagnoses', '—') }}</span></div>
+    <div class="info-pill pill-blue"><span class="pill-label">Rules</span><span class="pill-value">{{ stats.get('rules', '—') }}</span></div>
+    <div class="info-pill pill-green"><span class="pill-label">Consultations</span><span class="pill-value">{{ stats.get('consultations', '—') }}</span></div>
+  </div>
+</section>
+{% endif %}
+
+{% if admin_users %}
+<section class="card" style="margin-bottom:20px;">
+  <h2>User accounts</h2>
+  <p class="card-subtitle">Change site role (user or admin). You cannot remove your own admin access here.</p>
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:0.92rem;">
+      <thead><tr style="text-align:left; border-bottom:1px solid #e5e7eb;">
+        <th style="padding:8px;">ID</th><th style="padding:8px;">Username</th><th style="padding:8px;">Email</th><th style="padding:8px;">Role</th><th style="padding:8px;"></th>
+      </tr></thead>
+      <tbody>
+        {% for u in admin_users %}
+        <tr style="border-bottom:1px solid #f3f4f6;">
+          <td style="padding:8px;">{{ u.id }}</td>
+          <td style="padding:8px;">{{ u.username }}</td>
+          <td style="padding:8px;">{{ u.email or "—" }}</td>
+          <td style="padding:8px;">
+            <form method="post" action="{{ url_for('admin_user_role') }}" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="hidden" name="user_id" value="{{ u.id }}">
+              <select name="role">
+                <option value="user" {% if u.role == 'user' %}selected{% endif %}>user</option>
+                <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>admin</option>
+              </select>
+              <button class="secondary-btn" type="submit">Save</button>
+            </form>
+          </td>
+          <td style="padding:8px; color:#9ca3af;">{{ u.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if expert_accounts %}
+<section class="card" style="margin-bottom:20px;">
+  <h2>Expert accounts &amp; KB access</h2>
+  <p class="card-subtitle">
+    Enable <strong>Knowledge base</strong> for an expert to edit symptoms, plans, foods, and rules from the expert login.
+    Link a site user and check <strong>Grant site admin</strong> to promote that user to admin (full admin panel).
+  </p>
+  {% for row in expert_accounts %}
+    {% if row.login_email or row.login_username %}
+    <div class="card" style="box-shadow:none; margin-bottom:14px;">
+      <strong>{{ row.expert_name }}</strong>{% if row.specialty %} <span style="color:#6b7280;">({{ row.specialty }})</span>{% endif %}
+      <div class="card-subtitle">Login: {{ row.login_email or row.login_username }}</div>
+      <form method="post" action="{{ url_for('admin_expert_access') }}" style="margin-top:10px;">
+        <input type="hidden" name="expert_id" value="{{ row.expert_id }}">
+        <div class="field">
+          <label><input type="checkbox" name="can_manage_kb" value="1" {% if row.can_manage_kb %}checked{% endif %}> Allow knowledge-base management</label>
+        </div>
+        <div class="field">
+          <label>Linked site user (optional)</label>
+          <select name="linked_user_id">
+            <option value="">— None —</option>
+            {% for u in admin_users %}
+              <option value="{{ u.id }}" {% if row.linked_user_id == u.id %}selected{% endif %}>{{ u.username }} ({{ u.email or 'no email' }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" name="grant_site_admin" value="1"> Grant site admin to linked user (saves linked user first)</label>
+        </div>
+        <div class="card-footer-right">
+          <button class="primary-btn" type="submit">Save expert access</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  {% endfor %}
+  {% if not expert_login_rows %}
+    <p>No expert login accounts yet. Use the project script to create expert credentials, then refresh this page.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if audit_rows %}
+<section class="card" style="margin-bottom:20px;">
+  <h2>Admin audit log</h2>
+  <ul class="compact-list">
+    {% for a in audit_rows %}
+      <li><strong>{{ a.created_at }}</strong> · {{ a.admin_username }} · {{ a.action }}{% if a.detail %}: {{ a.detail }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="admin-grid">
+  <section class="card">
+    <h2>Add Symptom / Condition</h2>
+    <form method="post" action="{{ url_for('admin_symptom_add') }}">
+      <div class="field"><label>Code</label><input name="code" placeholder="DM2"></div>
+      <div class="field"><label>Name</label><input name="name" required placeholder="Diabetes"></div>
+      <div class="field"><label>Description</label><input name="description" placeholder="Short description"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Add</button></div>
+    </form>
+    <h3>Existing</h3>
+    <ul class="compact-list">
+      {% for s in symptoms %}
+        <li><strong>{{ s.code or "—" }}</strong> — {{ s.name }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Add Plan (Diagnosis)</h2>
+    <form method="post" action="{{ url_for('admin_diagnosis_add') }}">
+      <div class="field"><label>Code</label><input name="code" placeholder="DASH_DIET"></div>
+      <div class="field"><label>Name</label><input name="name" required placeholder="Hypertension plan"></div>
+      <div class="field"><label>Description</label><input name="description" placeholder="Short description"></div>
+      <div class="field"><label>General advice</label><input name="general_advice" placeholder="What to do"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Add</button></div>
+    </form>
+    <h3>Existing</h3>
+    <ul class="compact-list">
+      {% for d in diagnoses %}
+        <li><strong>{{ d.code or "—" }}</strong> — {{ d.name }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Add Ghana Food</h2>
+    <form method="post" action="{{ url_for('admin_food_add') }}">
+      <div class="field"><label>Name</label><input name="name" required placeholder="Kontomire stew"></div>
+      <div class="field"><label>Local name</label><input name="local_name" placeholder="Kontomire"></div>
+      <div class="field"><label>Category</label><input name="category" placeholder="Vegetable"></div>
+      <div class="field"><label>Description</label><input name="description" placeholder="Short description"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Add</button></div>
+    </form>
+    <h3>Existing</h3>
+    <ul class="compact-list">
+      {% for f in foods %}
+        <li><strong>{{ f.category or "—" }}</strong> — {{ f.name }}{% if f.local_name %} ({{ f.local_name }}){% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Add / Update Rule</h2>
+    <form method="post" action="{{ url_for('admin_rule_add') }}">
+      <div class="field">
+        <label>Condition</label>
+        <select name="symptom_id" required>
+          {% for s in symptoms %}
+            <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Plan</label>
+        <select name="diagnosis_id" required>
+          {% for d in diagnoses %}
+            <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>Weight</label><input type="number" name="weight" min="1" max="10" value="3"></div>
+      <div class="card-footer-right"><button class="primary-btn" type="submit">Save</button></div>
+    </form>
+    <h3>Existing rules (edit or delete)</h3>
+    <ul class="compact-list" style="list-style:none; padding-left:0;">
+      {% for r in rules %}
+        <li style="margin-bottom:12px; border-bottom:1px solid #e5e7eb; padding-bottom:10px;">
+          <div style="margin-bottom:6px;"><strong>{{ r.symptom_name }}</strong> → {{ r.diagnosis_name }}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:end;">
+            <form method="post" action="{{ url_for('admin_rule_update') }}" style="display:flex; gap:8px; align-items:end;">
+              <input type="hidden" name="rule_id" value="{{ r.id }}">
+              <div class="field" style="margin:0;">
+                <label>Weight</label>
+                <input type="number" name="weight" min="1" max="10" value="{{ r.weight }}" style="width:72px;">
+              </div>
+              <button class="secondary-btn" type="submit">Update</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_rule_delete') }}" onsubmit="return confirm('Delete this rule?');">
+              <input type="hidden" name="rule_id" value="{{ r.id }}">
+              <button class="secondary-btn" type="submit" style="color:#b91c1c;">Delete</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Consultation Requests</h2>
+    <p class="card-subtitle">Respond and update status for user requests.</p>
+
+    {% if consultations %}
+      {% for c in consultations %}
+        <div class="card" style="padding:12px 14px; box-shadow:none;">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:baseline;">
+            <div>
+              <strong>{{ c.username }}</strong> → <strong>{{ c.expert_name }}</strong>
+              {% if c.specialty %}<span style="color:#6b7280;"> ({{ c.specialty }})</span>{% endif %}
+              <div class="card-subtitle" style="margin-top:4px; margin-bottom:8px;">
+                Request #{{ c.id }} • {{ c.created_at }} • Current status: <strong>{{ c.status }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="color:#374151; font-size:0.92rem; margin-bottom:10px;">
+            <strong>User message:</strong> {{ c.user_message }}
+            {% if c.admin_response %}
+              <br><strong>Admin response:</strong> {{ c.admin_response }}
+            {% endif %}
+            {% if c.expert_response %}
+              <br><strong>Expert response:</strong> {{ c.expert_response }}
+            {% endif %}
+          </div>
+
+          <form method="post" action="{{ url_for('admin_consultation_update') }}">
+            <input type="hidden" name="request_id" value="{{ c.id }}">
+
+            <div class="field">
+              <label>Status</label>
+              <select name="status">
+                <option value="pending" {% if c.status=='pending' %}selected{% endif %}>pending</option>
+                <option value="accepted" {% if c.status=='accepted' %}selected{% endif %}>accepted</option>
+                <option value="rejected" {% if c.status=='rejected' %}selected{% endif %}>rejected</option>
+                <option value="completed" {% if c.status=='completed' %}selected{% endif %}>completed</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Admin response</label>
+              <textarea name="admin_response" rows="3" style="width:100%; border-radius:10px; border:1px solid #d1d5db; padding:10px;">
+{{ c.admin_response or '' }}</textarea>
+            </div>
+
+            <div class="card-footer-right">
+              <button class="primary-btn" type="submit">Update</button>
+            </div>
+          </form>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No consultation requests yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+

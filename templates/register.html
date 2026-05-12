@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Create account</h1>
+  <p>Sign up to save your profile, recommendations and consultation history.</p>
+</section>
+
+<form method="post" action="{{ url_for('register_post') }}" class="card auth-card">
+  <div class="field">
+    <label>Username</label>
+    <input type="text" name="username" required placeholder="e.g. aniamtimtey">
+  </div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" name="email" required placeholder="e.g. aniamtimtey@gmail.com">
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
+  </div>
+
+  {% if error %}
+    <p class="error-text">{{ error }}</p>
+  {% endif %}
+
+  <div class="card-footer-right">
+    <button class="primary-btn" type="submit">Create account</button>
+  </div>
+
+  <p class="card-subtitle">
+    Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+  </p>
+</form>
+{% endblock %}
+

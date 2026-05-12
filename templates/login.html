@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Sign in</h1>
+  <p>Access your dashboard, history and timeline.</p>
+</section>
+
+<form method="post" action="{{ url_for('login_post') }}" class="card auth-card">
+  <input type="hidden" name="next" value="{{ next }}">
+
+  <div class="field">
+    <label>Email or Username</label>
+    <input type="text" name="username" required>
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" name="password" required>
+  </div>
+
+  {% if error %}
+    <p class="error-text">{{ error }}</p>
+  {% endif %}
+
+  <div class="card-footer-right">
+    <button class="primary-btn" type="submit">Continue</button>
+  </div>
+
+  <p class="card-subtitle">
+    Admin demo: run <code>python create_admin.py</code> then login with <code>admin</code> / <code>admin12345</code>.
+  </p>
+
+  <p class="card-subtitle">
+    New here? <a href="{{ url_for('register') }}">Create an account</a>
+  </p>
+</form>
+{% endblock %}
+

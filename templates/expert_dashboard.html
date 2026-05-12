@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Expert Dashboard{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Expert Dashboard</h1>
+  <p>Review consultation requests and provide expert responses.</p>
+  {% if expert.can_manage_kb %}
+    <p class="card-subtitle" style="margin-top:10px;">
+      <a class="primary-btn" href="{{ url_for('expert_knowledge') }}" style="display:inline-block; text-decoration:none;">Knowledge base</a>
+      <span style="margin-left:10px; color:#6b7280;">Manage symptoms, plans, foods, and rules</span>
+    </p>
+  {% endif %}
+</section>
+
+<section class="card" style="overflow:hidden;">
+  <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+    <div style="flex:1; min-width:260px;">
+      <h2 style="margin:0 0 6px;">Nutrition consultation cases</h2>
+      <p class="card-subtitle" style="margin:0;">
+        Use the filters to find pending cases, then submit expert guidance.
+      </p>
+    </div>
+    <div style="flex:1; min-width:280px; display:flex; justify-content:flex-end;">
+      {% if hero_image %}
+        <img style="width:100%; max-width:520px; height:180px; object-fit:cover; border-radius:14px; border:1px solid rgba(229,231,235,0.9);"
+             src="{{ url_for('serve_asset', filename=hero_image) }}" alt="Healthy foods">
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:end;">
+    <form method="get" action="{{ url_for('expert_dashboard') }}" style="flex:1; min-width:260px; display:flex; gap:10px; flex-wrap:wrap;">
+      <div class="field" style="flex:1; min-width:220px;">
+        <label>Search</label>
+        <input type="text" name="q" value="{{ q }}" placeholder="username or message">
+      </div>
+      <div class="field" style="min-width:200px;">
+        <label>Status</label>
+        <select name="status">
+          <option value="all" {% if status=='all' %}selected{% endif %}>all</option>
+          <option value="pending" {% if status=='pending' %}selected{% endif %}>pending</option>
+          <option value="accepted" {% if status=='accepted' %}selected{% endif %}>accepted</option>
+          <option value="rejected" {% if status=='rejected' %}selected{% endif %}>rejected</option>
+          <option value="completed" {% if status=='completed' %}selected{% endif %}>completed</option>
+        </select>
+      </div>
+      <div class="card-footer-right" style="margin-top:26px;">
+        <button class="primary-btn" type="submit">Filter</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Assigned Requests</h2>
+  <p class="card-subtitle">
+    Expert: <strong>{{ expert.name }}</strong>{% if expert.specialty %} — {{ expert.specialty }}{% endif %}
+  </p>
+
+  {% if requests %}
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      {% for r in requests %}
+        <div class="card" style="box-shadow:none;">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline;">
+            <div>
+              <strong>{{ r.username }}</strong>
+              <span style="color:#6b7280;"> • {{ r.created_at }}</span>
+            </div>
+            <span class="score-pill">Status: {{ r.status }}</span>
+          </div>
+
+          <div style="margin-top:10px; color:#374151; font-size:0.95rem;">
+            <div style="margin-bottom:8px;"><strong>User message:</strong></div>
+            <div style="white-space:pre-wrap;">{{ r.user_message }}</div>
+
+            {% if r.admin_response %}
+              <div style="margin-top:10px;"><strong>Admin note:</strong></div>
+              <div style="white-space:pre-wrap;">{{ r.admin_response }}</div>
+            {% endif %}
+
+            {% if r.expert_response %}
+              <div style="margin-top:10px;"><strong>Current expert response:</strong></div>
+              <div style="white-space:pre-wrap;">{{ r.expert_response }}</div>
+            {% endif %}
+          </div>
+
+          <form method="post" action="{{ url_for('expert_consultation_update') }}" style="margin-top:12px;">
+            <input type="hidden" name="request_id" value="{{ r.id }}">
+
+            <div class="field">
+              <label>Set status</label>
+              <select name="status">
+                <option value="pending" {% if r.status=='pending' %}selected{% endif %}>pending</option>
+                <option value="accepted" {% if r.status=='accepted' %}selected{% endif %}>accepted</option>
+                <option value="rejected" {% if r.status=='rejected' %}selected{% endif %}>rejected</option>
+                <option value="completed" {% if r.status=='completed' %}selected{% endif %}>completed</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Expert response</label>
+              <textarea
+                name="expert_response"
+                rows="3"
+                style="width:100%; border-radius:10px; border:1px solid #d1d5db; padding:10px;"
+                placeholder="Write your expert guidance...">{{ r.expert_response or '' }}</textarea>
+            </div>
+
+            <div class="card-footer-right">
+              <button class="primary-btn" type="submit">Submit</button>
+            </div>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No requests found with your filter.</p>
+  {% endif %}
+</section>
+{% endblock %}
+

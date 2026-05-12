@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Timeline{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Timeline</h1>
+  <p>Recommendations over time (sorted by most recent).</p>
+</section>
+
+<section class="card">
+  {% if rows %}
+    <div class="timeline">
+      {% set current_run = None %}
+      {% for row in rows %}
+        {% if current_run != row.run_id %}
+          {% set current_run = row.run_id %}
+          <div class="timeline-run">
+            <div class="timeline-run-header">
+              <div class="run-title">Run #{{ row.run_id }}</div>
+              <div class="run-date">{{ row.created_at }}</div>
+            </div>
+            <div class="timeline-items">
+        {% endif %}
+
+              <div class="timeline-item">
+                <div class="item-score">{{ row.score }}</div>
+                <div class="item-name">{{ row.diagnosis_name }}</div>
+              </div>
+
+        {% set next_row = rows[loop.index] if not loop.last else None %}
+        {% if loop.last or next_row.run_id != current_run %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No timeline yet. Generate recommendations to populate it.</p>
+  {% endif %}
+</section>
+
+<a href="{{ url_for('dashboard') }}" class="secondary-btn">← Back</a>
+{% endblock %}
+

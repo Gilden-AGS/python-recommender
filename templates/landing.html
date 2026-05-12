@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriExpert — Personalized Nutrition</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="landing-body">
+  <div class="side-rail">
+    <div class="rail-icon">N</div>
+    <div class="rail-dots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <main class="landing-main">
+    <header class="landing-header">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">NutriExpert</span>
+      </div>
+      <nav class="landing-nav">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('register') }}">Create account</a>
+        <a class="cta" href="{{ url_for('login') }}">Sign in</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Personalized<br>Nutrition, Powered<br>by smart rules</h1>
+        <p>
+          Get tailored diet recommendations based on your health profile and conditions.
+          Built as a recommendation system with a Ghana-friendly food database.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="{{ url_for('dashboard') }}">Get Started</a>
+          <a class="btn ghost" href="{{ url_for('dashboard') }}">Learn More</a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-value">10k+</div>
+            <div class="stat-label">Profiles</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">50k+</div>
+            <div class="stat-label">Recommendations</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">98%</div>
+            <div class="stat-label">Satisfaction</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-panel">
+        <div class="panel-card">
+          {% if hero_image %}
+            <img class="panel-hero-img" src="{{ url_for('serve_asset', filename=hero_image) }}" alt="Healthy food background">
+          {% endif %}
+          <div class="panel-title">AI‑Powered Analysis</div>
+          <div class="panel-item">
+            <span class="pill blue"></span>
+            <div>
+              <div class="item-name">Profile‑based</div>
+              <div class="item-sub">BMI, activity, diet preference</div>
+            </div>
+          </div>
+          <div class="panel-item">
+            <span class="pill green"></span>
+            <div>
+              <div class="item-name">Expert rules</div>
+              <div class="item-sub">Weighted conditions → plans</div>
+            </div>
+          </div>
+          <div class="panel-item">
+            <span class="pill purple"></span>
+            <div>
+              <div class="item-name">Ghana foods</div>
+              <div class="item-sub">Local meal suggestions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>Powerful Features</h2>
+      <p class="sub">Everything you need for personalized nutrition guidance</p>
+
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+          <div class="feature-title">Personalized Profiles</div>
+          <div class="feature-sub">Store BMI, preferences and lifestyle data.</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚙</div>
+          <div class="feature-title">Recommendation Engine</div>
+          <div class="feature-sub">Weighted rules generate ranked plans.</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🍲</div>
+          <div class="feature-title">Ghana Food Library</div>
+          <div class="feature-sub">Local meal suggestions for each plan.</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🕒</div>
+          <div class="feature-title">Timeline</div>
+          <div class="feature-sub">Track recommendations over time.</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🗂</div>
+          <div class="feature-title">History</div>
+          <div class="feature-sub">Saved runs for later reference.</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title">Admin Control</div>
+          <div class="feature-sub">Manage conditions, rules, foods.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bottom-cta">
+      <div>
+        <h3>Ready to transform your nutrition?</h3>
+        <p>Start your profile and generate recommendations in minutes.</p>
+      </div>
+      <a class="btn primary" href="{{ url_for('dashboard') }}">Get Started</a>
+    </section>
+
+    <footer class="landing-footer">
+      <div>NutriExpert</div>
+      <div class="footer-links">
+        <a href="{{ url_for('dashboard') }}">Product</a>
+        <a href="{{ url_for('login') }}">Sign in</a>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
+

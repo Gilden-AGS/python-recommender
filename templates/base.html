@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Nutrition Expert{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body class="app-body">
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <div class="logo-dot"></div>
+      <div class="logo-text">
+        <span class="logo-name">NutriExpert</span>
+        <span class="logo-sub">Nutrition & diet recommendation system</span>
+      </div>
+    </div>
+    <nav class="top-nav">
+      <a href="{{ url_for('landing') }}">Home</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      {% if user %}
+        <a href="{{ url_for('history') }}">History</a>
+        <a href="{{ url_for('timeline') }}">Timeline</a>
+        <a href="{{ url_for('consult') }}">Consult</a>
+        {% if user.role == 'admin' %}
+          <a href="{{ url_for('admin') }}">Admin</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Sign in</a>
+        <a href="{{ url_for('expert_login') }}" style="margin-left:16px;">Expert login</a>
+      {% endif %}
+      {% if expert %}
+        <a href="{{ url_for('expert_dashboard') }}" style="margin-left:12px;">Expert dashboard</a>
+        {% if expert.can_manage_kb %}
+          <a href="{{ url_for('expert_knowledge') }}" style="margin-left:12px;">Expert KB</a>
+        {% endif %}
+        <a href="{{ url_for('expert_logout') }}" style="margin-left:12px;">Expert logout</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="app-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
+

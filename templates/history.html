@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>History</h1>
+  <p>Your saved recommendation runs.</p>
+</section>
+
+<section class="card">
+  {% if runs %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Date</th>
+          <th>BMI</th>
+          <th>Category</th>
+          <th>Diet</th>
+          <th>Activity</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in runs %}
+          <tr>
+            <td>#{{ r.id }}</td>
+            <td>{{ r.created_at }}</td>
+            <td>{{ r.bmi or "—" }}</td>
+            <td>{{ r.bmi_category or "—" }}</td>
+            <td>{{ r.diet_preference or "—" }}</td>
+            <td>{{ r.activity_level or "—" }}</td>
+            <td>
+              <a class="primary-btn" href="{{ url_for('run_view', run_id=r.id) }}">View Recommendations</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No history yet. Generate recommendations from the dashboard.</p>
+  {% endif %}
+</section>
+
+<a href="{{ url_for('dashboard') }}" class="secondary-btn">← Back</a>
+{% endblock %}
+

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Consult Nutrition Experts{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+  <h1>Contact Nutrition Experts</h1>
+  <p>Send your message and request a consultation. Admin will review and respond.</p>
+</section>
+
+<section class="card consult-hero">
+  <div class="consult-hero-grid">
+    <div>
+      <h2 style="margin:0 0 8px;">Get expert support</h2>
+      <p class="card-subtitle" style="margin-bottom:0;">
+        Ask your question and track the response after admin approval.
+      </p>
+    </div>
+    <div class="consult-hero-img">
+      {% if secondary_image %}
+        <img src="{{ url_for('serve_asset', filename=secondary_image) }}" alt="Nutrition consultation">
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if error %}
+  <section class="card">
+    <p class="error-text">{{ error }}</p>
+  </section>
+{% endif %}
+
+<section class="card">
+  <h2>Choose an expert</h2>
+  <p class="card-subtitle">Pick who you want to consult with, then write your message.</p>
+
+  <form method="post" action="{{ url_for('consult_send') }}">
+    <div class="field">
+      <label>Nutrition Expert</label>
+      <select name="expert_id" required>
+        <option value="">Select</option>
+        {% for e in experts %}
+          <option
+            value="{{ e.id }}"
+            data-phone="{{ e.contact_phone or '' }}"
+            data-email="{{ e.contact_email or '' }}"
+            data-whatsapp="{{ e.contact_whatsapp or '' }}"
+            data-linkedin="{{ e.contact_linkedin or '' }}"
+            data-facebook="{{ e.contact_facebook or '' }}"
+            data-instagram="{{ e.contact_instagram or '' }}"
+          >
+            {{ e.name }}{% if e.specialty %} — {{ e.specialty }}{% endif %}
+            {% if e.contact_phone %} • {{ e.contact_phone }}{% endif %}
+            {% if e.contact_email %} • {{ e.contact_email }}{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="font-size:0.92rem; color:#374151; padding:8px 0;">
+      <strong>Direct contact:</strong>
+      <div>
+        <span>Phone: </span>
+        <a id="expert-phone-link" href="#" onclick="return false;" style="color:#0f766e; text-decoration:none;">—</a>
+      </div>
+      <div>
+        <span>Email: </span>
+        <a id="expert-email-link" href="#" onclick="return false;" style="color:#0f766e; text-decoration:none;">—</a>
+      </div>
+      <div>
+        <span>WhatsApp: </span>
+        <a id="expert-whatsapp-link" href="#" onclick="return false;" style="color:#0f766e; text-decoration:none;">—</a>
+      </div>
+      <div>
+        <span>LinkedIn: </span>
+        <a id="expert-linkedin-link" href="#" target="_blank" rel="noreferrer" style="color:#0f766e; text-decoration:none;">—</a>
+      </div>
+      <div>
+        <span>Facebook: </span>
+        <a id="expert-facebook-link" href="#" target="_blank" rel="noreferrer" style="color:#0f766e; text-decoration:none;">—</a>
+      </div>
+      <div>
+        <span>Instagram: </span>
+        <a id="expert-instagram-link" href="#" target="_blank" rel="noreferrer" style="color:#0f766e; text-decoration:none;">—</a>
+      </div>
+      <div class="card-subtitle" style="margin-top:6px;">
+        After you send your request, admin/expert will review and respond.
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Your message</label>
+      <textarea name="message" rows="5" style="width:100%; border-radius:10px; border:1px solid #d1d5db; padding:10px;" required placeholder="Describe your condition, goal, and what you want advice on."></textarea>
+    </div>
+
+    <div class="card-footer-right">
+      <button class="primary-btn" type="submit">Send Consultation Request</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Your requests</h2>
+  <p class="card-subtitle">Latest consultation requests you have sent.</p>
+
+  {% if my_requests %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Expert</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in my_requests %}
+          <tr>
+            <td>{{ r.expert_name }}</td>
+            <td>{{ r.status }}</td>
+            <td>{{ r.created_at }}</td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <div style="font-size:0.92rem; color:#374151; padding:8px 0;">
+                <strong>Your message:</strong> {{ r.user_message }}
+                {% if r.admin_response %}
+                  <br><strong>Admin response:</strong> {{ r.admin_response }}
+                {% endif %}
+                {% if r.expert_response %}
+                  <br><strong>Expert response:</strong> {{ r.expert_response }}
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No consultation requests yet.</p>
+  {% endif %}
+</section>
+
+  <script>
+    (function () {
+      const select = document.querySelector('select[name="expert_id"]');
+      const phone = document.getElementById('expert-phone-link');
+      const email = document.getElementById('expert-email-link');
+      const whatsapp = document.getElementById('expert-whatsapp-link');
+      const linkedin = document.getElementById('expert-linkedin-link');
+      const facebook = document.getElementById('expert-facebook-link');
+      const instagram = document.getElementById('expert-instagram-link');
+      if (!select || !phone || !email || !whatsapp || !linkedin || !facebook || !instagram) return;
+
+      function update() {
+        const opt = select.options[select.selectedIndex];
+        if (!opt) return;
+
+        const p = opt.dataset.phone || "";
+        const em = opt.dataset.email || "";
+        const wa = opt.dataset.whatsapp || "";
+        const li = opt.dataset.linkedin || "";
+        const fb = opt.dataset.facebook || "";
+        const ig = opt.dataset.instagram || "";
+
+        phone.textContent = p || "—";
+        phone.href = p ? ("tel:" + p) : "#";
+
+        email.textContent = em || "—";
+        email.href = em ? ("mailto:" + em) : "#";
+
+        whatsapp.textContent = wa || "—";
+        whatsapp.href = wa ? ("https://wa.me/" + wa.replace(/[^\d]/g,'')) : "#";
+
+        linkedin.textContent = li || "—";
+        linkedin.href = li || "#";
+
+        facebook.textContent = fb || "—";
+        facebook.href = fb || "#";
+
+        instagram.textContent = ig || "—";
+        instagram.href = ig || "#";
+      }
+
+      select.addEventListener('change', update);
+      update();
+    })();
+  </script>
+
+{% endblock %}
+
