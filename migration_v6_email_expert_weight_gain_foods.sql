@@ -6,4 +6,3 @@
 --
 -- Run this in phpMyAdmin for database `nutrition_expert`.
 
-c
